@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+{% block title %}Scan QR – QRTrack{% endblock %}
+{% block page_title %}Scan QR Code{% endblock %}
+{% block page_sub %}<span style="font-size:12px;color:var(--muted)">Check in, check out, or transfer a file</span>{% endblock %}
+
+{% block extra_css %}
+<style>
+  .scan-area {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+  }
+  #reader { width: 100% !important; }
+  #reader video { border-radius: 0 !important; }
+  .file-preview {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    display: none;
+  }
+  .file-preview.visible { display: block; }
+  .file-preview-label { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.08em; margin-bottom: 4px; }
+  .file-preview-val { font-size: 14px; font-weight: 600; }
+  .action-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+  .action-btn {
+    flex: 1; padding: 14px;
+    border-radius: 10px; border: 2px solid transparent;
+    cursor: pointer; font-size: 14px; font-weight: 600;
+    font-family: var(--sans);
+    transition: all 0.15s; text-align: center;
+    background: var(--surface2);
+    color: var(--muted);
+  }
+  .action-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .action-btn.selected-checkin  { background: rgba(16,185,129,0.1); border-color: var(--green); color: var(--green); }
+  .action-btn.selected-checkout { background: rgba(245,158,11,0.1); border-color: var(--amber); color: var(--amber); }
+  .action-btn.selected-transfer { background: rgba(0,212,255,0.1); border-color: var(--accent); color: var(--accent); }
+  #transfer-dept { display: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="grid-2">
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">📷 QR Scanner</div>
+      <div class="card-sub">Point camera at file QR code, or type File ID manually</div>
+    </div>
+
+    <div class="scan-area" style="margin-bottom:16px">
+      <div id="reader"></div>
+    </div>
+
+    <button onclick="toggleCamera()" id="cam-btn" class="btn btn-secondary" style="width:100%;margin-bottom:20px">
+      📷 Start Camera Scanner
+    </button>
+
+    <!-- File preview after scan -->
+    <div class="file-preview" id="file-preview">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <div class="file-preview-label">FILE ID</div>
+          <div class="file-preview-val" id="preview-id">—</div>
+        </div>
+        <div>
+          <div class="file-preview-label">FILE NAME</div>
+          <div class="file-preview-val" id="preview-name">—</div>
+        </div>
+        <div>
+          <div class="file-preview-label">DEPARTMENT</div>
+          <div class="file-preview-val" id="preview-dept">—</div>
+        </div>
+        <div>
+          <div class="file-preview-label">LAST HANDLER</div>
+          <div class="file-preview-val" id="preview-person">—</div>
+        </div>
+      </div>
+    </div>
+
+    <form method="POST" id="scan-form" style="margin-top:20px">
+      <div class="form-group">
+        <label>FILE ID (manual entry)</label>
+        <input type="text" name="file_id" id="file_id_input" placeholder="e.g. CS-2024-001"
+               style="font-family:var(--mono);text-transform:uppercase"
+               oninput="lookupFile(this.value)">
+      </div>
+
+      <div class="form-group">
+        <label>ACTION</label>
+        <div class="action-btns">
+          <button type="button" class="action-btn" onclick="selectAction('checkin')">↙ Check In</button>
+          <button type="button" class="action-btn" onclick="selectAction('checkout')">↗ Check Out</button>
+          <button type="button" class="action-btn" onclick="selectAction('transfer')">⇄ Transfer</button>
+        </div>
+        <input type="hidden" name="action" id="action-input">
+      </div>
+
+      <div class="form-group">
+      <label>FILE STAGE</label>
+
+      <select name="stage" required>
+      <option value="created">Created</option>
+      <option value="review">Review</option>
+      <option value="approved">Approved</option>
+      <option value="closed">Closed</option>
+      </select>
+
+      </div>
+
+      <div class="form-group" id="transfer-dept">
+        <label>TRANSFER TO DEPARTMENT</label>
+        <select name="new_department">
+          <option value="">Select destination</option>
+          <option>Administration</option>
+          <option>Computer Science</option>
+          <option>Mechanical Engineering</option>
+          <option>Electrical Engineering</option>
+          <option>Civil Engineering</option>
+          <option>Physics</option>
+          <option>Mathematics</option>
+          <option>Hostel Office</option>
+          <option>Library</option>
+          <option>Finance</option>
+          <option>Student Affairs</option>
+          <option>Research</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>NOTES (optional)</label>
+        <input type="text" name="notes" placeholder="Reason, remarks, urgency...">
+      </div>
+
+      <button type="submit" id="submit-btn" class="btn btn-primary" style="width:100%" disabled>
+        Submit Action →
+      </button>
+    </form>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:20px">
+    <div class="card">
+      <div class="card-title" style="margin-bottom:16px">Action Guide</div>
+      <div style="display:flex;flex-direction:column;gap:14px;font-size:13px">
+        <div style="padding:12px;background:rgba(16,185,129,0.07);border:1px solid rgba(16,185,129,0.2);border-radius:8px">
+          <div style="color:var(--green);font-weight:600;margin-bottom:4px">↙ Check In</div>
+          <div style="color:var(--muted)">File is being received / returned to your department or cabinet.</div>
+        </div>
+        <div style="padding:12px;background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.2);border-radius:8px">
+          <div style="color:var(--amber);font-weight:600;margin-bottom:4px">↗ Check Out</div>
+          <div style="color:var(--muted)">You are taking the file out for review, processing, or delivery.</div>
+        </div>
+        <div style="padding:12px;background:rgba(0,212,255,0.07);border:1px solid rgba(0,212,255,0.2);border-radius:8px">
+          <div style="color:var(--accent);font-weight:600;margin-bottom:4px">⇄ Transfer</div>
+          <div style="color:var(--muted)">Moving the file permanently to another department's ownership.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="margin-bottom:8px">Recent Scans</div>
+      <div id="recent-scans" style="font-size:12px;color:var(--muted)">
+        No scans in this session yet.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+let scanner = null;
+let scannerRunning = false;
+let recentScans = [];
+
+function toggleCamera() {
+  const btn = document.getElementById('cam-btn');
+  if (!scannerRunning) {
+    scanner = new Html5Qrcode("reader");
+    scanner.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: { width: 250, height: 250 } },
+      (decodedText) => {
+        document.getElementById('file_id_input').value = decodedText;
+        lookupFile(decodedText);
+        scanner.stop();
+        scannerRunning = false;
+        btn.textContent = '📷 Start Camera Scanner';
+        addRecentScan(decodedText);
+      }
+    ).then(() => {
+      scannerRunning = true;
+      btn.textContent = '⏹ Stop Scanner';
+    });
+  } else {
+    scanner.stop();
+    scannerRunning = false;
+    btn.textContent = '📷 Start Camera Scanner';
+  }
+}
+
+let lookupTimeout;
+function lookupFile(val) {
+  clearTimeout(lookupTimeout);
+  if (!val || val.length < 3) return;
+  lookupTimeout = setTimeout(() => {
+    fetch('/fileinfo/' + val.trim().toUpperCase())
+      .then(r => r.json())
+      .then(data => {
+        if (data.error) {
+          document.getElementById('file-preview').classList.remove('visible');
+          return;
+        }
+        document.getElementById('preview-id').textContent = val.toUpperCase();
+        document.getElementById('preview-name').textContent = data.file_name;
+        document.getElementById('preview-dept').textContent = data.department;
+        document.getElementById('preview-person').textContent = data.person;
+        document.getElementById('file-preview').classList.add('visible');
+        checkSubmit();
+      });
+  }, 400);
+}
+
+function selectAction(action) {
+  document.querySelectorAll('.action-btn').forEach(b => {
+    b.className = 'action-btn';
+  });
+  event.target.className = `action-btn selected-${action}`;
+  document.getElementById('action-input').value = action;
+  document.getElementById('transfer-dept').style.display = action === 'transfer' ? 'block' : 'none';
+  checkSubmit();
+}
+
+function checkSubmit() {
+  const hasId = document.getElementById('file_id_input').value.trim().length > 0;
+  const hasAction = document.getElementById('action-input').value.trim().length > 0;
+  document.getElementById('submit-btn').disabled = !(hasId && hasAction);
+}
+
+function addRecentScan(id) {
+  recentScans.unshift({ id, time: new Date().toLocaleTimeString() });
+  if (recentScans.length > 5) recentScans.pop();
+  const el = document.getElementById('recent-scans');
+  el.innerHTML = recentScans.map(s => `
+    <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">
+      <span style="font-family:var(--mono);color:var(--text)">${s.id}</span>
+      <span>${s.time}</span>
+    </div>
+  `).join('');
+}
+</script>
+{% endblock %}

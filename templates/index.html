@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Dashboard – QRTrack{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_sub %}<span style="font-size:12px;color:var(--muted)">Real-time file tracking overview</span>{% endblock %}
+
+{% block content %}
+<div class="grid-4" style="margin-bottom:28px">
+  <div class="card stat">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between">
+      <div>
+        <div class="stat-num" style="color:var(--accent)">{{ total_files }}</div>
+        <div class="stat-label">Total Files</div>
+      </div>
+      <div class="stat-icon">📁</div>
+    </div>
+  </div>
+  <div class="card stat">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between">
+      <div>
+        <div class="stat-num" style="color:var(--amber)">{{ checked_out }}</div>
+        <div class="stat-label">Checked Out</div>
+      </div>
+      <div class="stat-icon">📤</div>
+    </div>
+  </div>
+  <div class="card stat">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between">
+      <div>
+        <div class="stat-num" style="color:var(--green)">{{ total_files - checked_out }}</div>
+        <div class="stat-label">Available</div>
+      </div>
+      <div class="stat-icon">✅</div>
+    </div>
+  </div>
+  <div class="card stat">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between">
+      <div>
+        <div class="stat-num" style="color:#a78bfa">{{ departments }}</div>
+        <div class="stat-label">Departments</div>
+      </div>
+      <div class="stat-icon">🏢</div>
+    </div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Recent Activity</div>
+      <div class="card-sub">Latest file movements across departments</div>
+    </div>
+    {% if recent %}
+    <table>
+      <thead>
+        <tr>
+          <th>FILE</th>
+          <th>ACTION</th>
+          <th>PERSON</th>
+          <th>TIME</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in recent %}
+        <tr>
+          <td>
+            <div style="font-weight:600;font-size:13px">{{ r['file_id'] }}</div>
+            <div style="font-size:11px;color:var(--muted)">{{ r['file_name'] }}</div>
+          </td>
+          <td>
+            {% if r['action'] == 'checkin' %}
+              <span class="badge badge-green">↙ Check In</span>
+            {% elif r['action'] == 'checkout' %}
+              <span class="badge badge-amber">↗ Check Out</span>
+            {% elif r['action'] == 'transfer' %}
+              <span class="badge badge-blue">⇄ Transfer</span>
+            {% else %}
+              <span class="badge badge-purple">✦ Created</span>
+            {% endif %}
+          </td>
+          <td style="font-size:12px">{{ r['person'] }}</td>
+          <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">
+            {{ r['in_time'][:16] if r['in_time'] else '—' }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div style="text-align:center;padding:40px;color:var(--muted)">
+      <div style="font-size:40px">📭</div>
+      <div style="margin-top:10px;font-size:14px">No activity yet. Create your first file!</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:20px">
+    <div class="card">
+      <div class="card-title" style="margin-bottom:16px">Quick Actions</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <a href="/create" class="btn btn-primary">➕ &nbsp;Create New File</a>
+        <a href="/scan"   class="btn btn-secondary">📷 &nbsp;Scan QR Code</a>
+        <a href="/history" class="btn btn-secondary">🕐 &nbsp;View History</a>
+        <a href="/files"  class="btn btn-secondary">📁 &nbsp;Browse All Files</a>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="margin-bottom:4px">System Info</div>
+      <div class="card-sub" style="margin-bottom:16px">QRTrack v1.0 – Team Vigilants</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.8">
+        ⚡ Real-time file tracking<br>
+        🔒 Role-based access control<br>
+        📊 Full audit trail<br>
+        📱 Mobile-friendly QR scanning
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

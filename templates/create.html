@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Create File – QRTrack{% endblock %}
+{% block page_title %}Create New File{% endblock %}
+{% block page_sub %}<span style="font-size:12px;color:var(--muted)">Register a file and generate its QR code</span>{% endblock %}
+
+{% block content %}
+<div class="grid-2">
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">File Details</div>
+      <div class="card-sub">All fields are required</div>
+    </div>
+    <form method="POST">
+      <div class="form-group">
+        <label>FILE ID</label>
+        <input type="text" name="file_id" placeholder="e.g. CS-2024-001" required style="font-family:var(--mono)">
+      </div>
+      <div class="form-group">
+        <label>FILE NAME / TITLE</label>
+        <input type="text" name="file_name" placeholder="e.g. Budget Approval Request" required>
+      </div>
+      <div class="form-group">
+        <label>DEPARTMENT</label>
+        <select name="department" required>
+          <option value="">Select Department</option>
+          <option>Administration</option>
+          <option>Computer Science</option>
+          <option>Mechanical Engineering</option>
+          <option>Electrical Engineering</option>
+          <option>Civil Engineering</option>
+          <option>Physics</option>
+          <option>Mathematics</option>
+          <option>Hostel Office</option>
+          <option>Library</option>
+          <option>Finance</option>
+          <option>Student Affairs</option>
+          <option>Research</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>PRIORITY</label>
+        <select name="priority">
+          <option value="normal">Normal</option>
+          <option value="high">High</option>
+          <option value="urgent">Urgent</option>
+          <option value="confidential">Confidential</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>DESCRIPTION (optional)</label>
+        <textarea name="description" rows="3" placeholder="Brief description of the file content..." style="resize:vertical"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%">Generate QR Code →</button>
+    </form>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:20px">
+    {% if qr_b64 %}
+    <div class="card" style="text-align:center">
+      <div class="card-title" style="margin-bottom:4px">✅ QR Code Generated</div>
+      <div class="card-sub" style="margin-bottom:20px">Print and attach this to file <strong>{{ file_id }}</strong></div>
+      <div style="background:#fff;display:inline-block;padding:16px;border-radius:12px">
+        <!-- qr_b64 is a data URI — works on cloud (no filesystem needed) -->
+        <img src="{{ qr_b64 }}" alt="QR Code" style="width:180px;height:180px;display:block">
+      </div>
+      <div style="margin-top:16px;font-family:var(--mono);font-size:13px;color:var(--accent)">{{ file_id }}</div>
+      <div style="margin-top:4px;font-size:12px;color:var(--muted)">{{ file_name }}</div>
+      <div style="margin-top:20px;display:flex;gap:10px;justify-content:center">
+        <!-- Download works with data URI too -->
+        <a href="{{ qr_b64 }}" download="{{ file_id }}.png" class="btn btn-primary btn-sm">⬇ Download QR</a>
+        <a href="/create" class="btn btn-secondary btn-sm">+ New File</a>
+      </div>
+    </div>
+    {% else %}
+    <div class="card">
+      <div class="card-title" style="margin-bottom:12px">How It Works</div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        {% for step, icon, desc in [
+          ('1', '📝', 'Fill in the file details on the left'),
+          ('2', '🖨️', 'Download and print the generated QR code'),
+          ('3', '📎', 'Attach the QR sticker to the physical file'),
+          ('4', '📷', 'Scan whenever the file moves between departments')
+        ] %}
+        <div style="display:flex;align-items:flex-start;gap:14px">
+          <div style="min-width:32px;height:32px;background:var(--surface2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;color:var(--accent)">{{ step }}</div>
+          <div>
+            <div style="font-size:18px">{{ icon }}</div>
+            <div style="font-size:13px;color:var(--muted);margin-top:2px">{{ desc }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="margin-bottom:8px">Priority Guide</div>
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:12px">
+        <div><span class="badge badge-blue">Normal</span> &nbsp; Regular departmental files</div>
+        <div><span class="badge badge-amber">High</span> &nbsp; Time-sensitive documents</div>
+        <div><span class="badge badge-red">Urgent</span> &nbsp; Immediate action required</div>
+        <div><span class="badge badge-purple">Confidential</span> &nbsp; Restricted access</div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

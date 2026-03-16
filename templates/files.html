@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+{% block title %}All Files – QRTrack{% endblock %}
+{% block page_title %}All Files{% endblock %}
+{% block page_sub %} <span style="font-size:12px;color:var(--muted)">
+Browse and search every registered file </span>
+{% endblock %}
+
+{% block extra_css %}
+
+<style>
+.filter-bar{
+display:flex;
+gap:12px;
+margin-bottom:20px;
+align-items:center;
+flex-wrap:wrap;
+}
+
+.search-box{
+flex:1;
+min-width:200px;
+}
+
+.priority-dot{
+width:8px;
+height:8px;
+border-radius:50%;
+display:inline-block;
+margin-right:6px;
+}
+</style>
+
+{% endblock %}
+
+{% block content %}
+
+<div class="filter-bar">
+
+<div class="search-box">
+<input
+type="text"
+id="search-input"
+placeholder="🔍 Search files by ID, name, or department..."
+oninput="filterFiles()"
+style="width:100%"
+>
+</div>
+
+<select id="filter-priority" onchange="filterFiles()" style="width:160px">
+<option value="">All Priorities</option>
+<option value="urgent">Urgent</option>
+<option value="high">High</option>
+<option value="normal">Normal</option>
+<option value="confidential">Confidential</option>
+</select>
+
+<a href="/create" class="btn btn-primary btn-sm">➕ New File</a>
+
+</div>
+
+<div class="card">
+
+<table id="files-table">
+
+<thead>
+<tr>
+<th>FILE ID</th>
+<th>NAME</th>
+<th>DEPARTMENT</th>
+<th>PRIORITY</th>
+<th>LAST HANDLER</th>
+<th>LAST ACTION</th>
+<th>CREATED</th>
+<th>ACTIONS</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for f in files %}
+
+<tr
+data-priority="{{ f.get('priority','') }}"
+data-search="{{ f.get('file_id','') }} {{ f.get('file_name','') }} {{ f.get('department','') }}"
+>
+
+<td>
+<span style="font-family:var(--mono);font-size:12px;color:var(--accent)">
+{{ f.get('file_id','—') }}
+</span>
+</td>
+
+<td style="font-weight:500">
+{{ f.get('file_name','—') }}
+</td>
+
+<td>
+<span style="font-size:12px;color:var(--muted)">
+{{ f.get('department','—') }}
+</span>
+</td>
+
+<td>
+
+{% set pr = f.get('priority','normal') %}
+
+{% if pr == 'urgent' %} <span class="badge badge-red">🔴 Urgent</span>
+
+{% elif pr == 'high' %} <span class="badge badge-amber">🟡 High</span>
+
+{% elif pr == 'confidential' %} <span class="badge badge-purple">🔒 Confidential</span>
+
+{% else %} <span class="badge badge-blue">Normal</span>
+
+{% endif %}
+
+</td>
+
+<td style="font-size:12px">
+{{ f.get('person','—') }}
+</td>
+
+<td>
+
+{% set act = f.get('action') %}
+
+{% if act == 'checkin' %} <span class="badge badge-green">↙ In</span>
+
+{% elif act == 'checkout' %} <span class="badge badge-amber">↗ Out</span>
+
+{% elif act == 'transfer' %} <span class="badge badge-blue">⇄ Transfer</span>
+
+{% elif act == 'created' %} <span class="badge badge-purple">✦ New</span>
+
+{% else %} <span style="color:var(--muted)">—</span>
+
+{% endif %}
+
+</td>
+
+<td style="font-family:var(--mono);font-size:11px;color:var(--muted)">
+
+{% if f.get('created_date') %}
+{{ f.get('created_date')[:10] }}
+{% else %}
+—
+{% endif %}
+
+</td>
+
+<td>
+
+<div style="display:flex;gap:6px">
+
+<a
+href="/history"
+onclick="sessionStorage.setItem('hid','{{ f.file_id }}')"
+class="btn btn-secondary btn-sm">
+
+>
+
+History </a>
+
+<a href="/scan" class="btn btn-secondary btn-sm">
+Scan
+</a>
+
+</div>
+
+</td>
+
+</tr>
+
+{% else %}
+
+<tr>
+<td colspan="8" style="text-align:center;padding:40px;color:var(--muted)">
+No files registered yet.
+<a href="/create" style="color:var(--accent)">Create one!</a>
+</td>
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+<div id="no-results" style="display:none;text-align:center;padding:40px;color:var(--muted)">
+No files match your search.
+</div>
+
+</div>
+
+<script>
+
+function filterFiles(){
+
+const q = document.getElementById('search-input').value.toLowerCase();
+const pr = document.getElementById('filter-priority').value;
+
+const rows = document.querySelectorAll('#files-table tbody tr');
+
+let visible = 0;
+
+rows.forEach(row => {
+
+if(!row.dataset) return;
+
+const txt = (row.dataset.search || '').toLowerCase();
+const prio = (row.dataset.priority || '');
+
+const show =
+(!q || txt.includes(q)) &&
+(!pr || prio === pr);
+
+row.style.display = show ? '' : 'none';
+
+if(show) visible++;
+
+});
+
+document.getElementById('no-results').style.display =
+visible === 0 ? 'block' : 'none';
+
+}
+
+</script>
+
+{% endblock %}

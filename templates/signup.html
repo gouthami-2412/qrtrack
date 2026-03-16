@@ -1,0 +1,212 @@
+<!-- <!DOCTYPE html>
+<html>
+<head>
+<title>Sign Up – QRTrack</title>
+</head>
+<body>
+
+<h2>Create Account</h2>
+
+<form method="POST">
+  <input type="text" name="full_name" placeholder="Full Name" required>
+  <input type="text" name="username" placeholder="Username" required>
+  <input type="password" name="password" placeholder="Password" required>
+  <input type="text" name="department" placeholder="Department" required>
+
+  <button type="submit">Create Account</button>
+</form>
+
+<p>Your account will be approved by an administrator.</p>
+
+</body>
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign Up – QRTrack</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg:#0a0f1e;
+  --surface:#111827;
+  --border:#1f3044;
+  --accent:#00d4ff;
+  --text:#e2e8f0;
+  --muted:#64748b;
+  --mono:'Space Mono', monospace;
+  --sans:'DM Sans', sans-serif;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  font-family:var(--sans);
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.signup-box{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:48px 40px;
+  width:100%;
+  max-width:420px;
+}
+
+.brand{text-align:center;margin-bottom:36px}
+
+.brand-icon{
+  width:56px;
+  height:56px;
+  background:linear-gradient(135deg,#00d4ff,#7c3aed);
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:26px;
+  margin:0 auto 16px;
+}
+
+h1{
+  font-family:var(--mono);
+  font-size:20px;
+  color:var(--accent);
+}
+
+.subtitle{
+  font-size:13px;
+  color:var(--muted);
+}
+
+.form-group{margin-bottom:18px}
+
+label{
+  font-size:11px;
+  font-family:var(--mono);
+  color:var(--muted);
+}
+
+input, select{
+  width:100%;
+  padding:11px 14px;
+  margin-top:6px;
+  background:#0a0f1e;
+  border:1px solid var(--border);
+  border-radius:8px;
+  color:var(--text);
+  font-size:14px;
+  outline:none;
+}
+
+input:focus{
+  border-color:var(--accent);
+  outline:none;
+}
+
+.btn{
+  width:100%;
+  padding:12px;
+  background:var(--accent);
+  border:none;
+  border-radius:8px;
+  font-weight:700;
+  cursor:pointer;
+  margin-top:10px;
+}
+
+.btn:hover{filter:brightness(1.1)}
+
+.switch{
+  text-align:center;
+  margin-top:18px;
+  font-size:13px;
+}
+
+.switch a{
+  color:var(--accent);
+  text-decoration:none;
+  font-weight:600;
+}
+
+.flash{
+  padding:10px;
+  margin-bottom:16px;
+  background:#7f1d1d;
+  border-radius:8px;
+  font-size:13px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="signup-box">
+
+<div class="brand">
+<div class="brand-icon">📂</div>
+<h1>QRTRACK</h1>
+<div class="subtitle">Create your account</div>
+</div>
+
+{% for cat,msg in get_flashed_messages(with_categories=True) %}
+<div class="flash">{{msg}}</div>
+{% endfor %}
+
+<form method="POST">
+
+<div class="form-group">
+<label>FULL NAME</label>
+<input type="text" name="full_name" required>
+</div>
+
+<div class="form-group">
+<label>USERNAME</label>
+<input type="text" name="username" required>
+</div>
+
+<div class="form-group">
+<label>PASSWORD</label>
+<input type="password" name="password" required>
+</div>
+
+<div class="form-group">
+<label>DEPARTMENT</label>
+<select name="department" required>
+<option value="">Select Department</option>
+<option>Administration</option>
+<option>Computer Science</option>
+<option>Mechanical Engineering</option>
+<option>Electrical Engineering</option>
+<option>Civil Engineering</option>
+<option>Physics</option>
+<option>Mathematics</option>
+<option>Hostel Office</option>
+<option>Library</option>
+<option>Finance</option>
+<option>Student Affairs</option>
+<option>Research</option>
+</select>
+</div>
+
+<button class="btn">CREATE ACCOUNT →</button>
+
+</form>
+
+<div class="switch">
+Already have an account?
+<a href="/login">Sign in</a>
+</div>
+
+</div>
+
+</body>
+</html>
