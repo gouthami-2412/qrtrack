@@ -90,6 +90,12 @@ def init_db():
             due_date TEXT,
             reminder_status TEXT DEFAULT 'none'
         )''')
+
+        c.execute("ALTER TABLE movements ADD COLUMN IF NOT EXISTS due_date TEXT")
+        c.execute("ALTER TABLE movements ADD COLUMN IF NOT EXISTS reminder_status TEXT DEFAULT 'none'")
+        c.execute("ALTER TABLE files ADD COLUMN IF NOT EXISTS due_date TEXT")
+        c.execute("ALTER TABLE files ADD COLUMN IF NOT EXISTS qr_base64 TEXT")
+        
         admin_pw = hashlib.sha256("admin123".encode()).hexdigest()
         c.execute("""INSERT INTO users (username, password, role, full_name, department)
                      VALUES (%s,%s,%s,%s,%s) ON CONFLICT (username) DO NOTHING""",
