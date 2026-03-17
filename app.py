@@ -6,19 +6,19 @@ import hashlib
 import qrcode
 import io
 import base64
+import sqlite3
 
-# ── Cloud DB: use PostgreSQL if DATABASE_URL is set, else SQLite locally ──
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
-if DATABASE_URL:
+try:
     import psycopg2
     import psycopg2.extras
-    if DATABASE_URL.startswith("postgres://"):
-        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
-    USE_POSTGRES = True
-else:
-    import sqlite3
+    USE_POSTGRES = bool(DATABASE_URL)
+except ImportError:
     USE_POSTGRES = False
+
+if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "qrtrack_secret_key_2024")
