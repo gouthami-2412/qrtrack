@@ -50,6 +50,10 @@
         <label>DESCRIPTION (optional)</label>
         <textarea name="description" rows="3" placeholder="Brief description of the file content..." style="resize:vertical"></textarea>
       </div>
+      <div class="form-group">
+        <label>DUE DATE</label>
+        <input type="date" name="due_date">
+      </div>
       <button type="submit" class="btn btn-primary" style="width:100%">Generate QR Code →</button>
     </form>
   </div>
@@ -60,13 +64,11 @@
       <div class="card-title" style="margin-bottom:4px">✅ QR Code Generated</div>
       <div class="card-sub" style="margin-bottom:20px">Print and attach this to file <strong>{{ file_id }}</strong></div>
       <div style="background:#fff;display:inline-block;padding:16px;border-radius:12px">
-        <!-- qr_b64 is a data URI — works on cloud (no filesystem needed) -->
         <img src="{{ qr_b64 }}" alt="QR Code" style="width:180px;height:180px;display:block">
       </div>
       <div style="margin-top:16px;font-family:var(--mono);font-size:13px;color:var(--accent)">{{ file_id }}</div>
       <div style="margin-top:4px;font-size:12px;color:var(--muted)">{{ file_name }}</div>
       <div style="margin-top:20px;display:flex;gap:10px;justify-content:center">
-        <!-- Download works with data URI too -->
         <a href="{{ qr_b64 }}" download="{{ file_id }}.png" class="btn btn-primary btn-sm">⬇ Download QR</a>
         <a href="/create" class="btn btn-secondary btn-sm">+ New File</a>
       </div>
