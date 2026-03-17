@@ -287,7 +287,6 @@ def create():
         dept      = request.form["department"].strip()
         priority  = request.form.get("priority", "normal")
         desc      = request.form.get("description", "").strip()
-        due_date  = request.form.get("due_date", "").strip() or None
         person    = session["full_name"]
 
         conn = get_db()
@@ -316,23 +315,23 @@ def create():
         if USE_POSTGRES:
             c = conn.cursor()
             c.execute("""
-                INSERT INTO files (file_id,file_name,department,created_date,status,stage,priority,description,due_date,qr_base64)
-                VALUES (%s,%s,%s,%s,'active','created',%s,%s,%s,%s)
-            """, (file_id, file_name, dept, now, priority, desc, due_date, qr_b64))
+                INSERT INTO files (file_id,file_name,department,created_date,status,stage,priority,description,qr_base64)
+                VALUES (%s,%s,%s,%s,'active','created',%s,%s,%s)
+            """, (file_id, file_name, dept, now, priority, desc, qr_b64))
             c.execute("""
-                INSERT INTO movements (file_id,department,person,action,in_time,due_date)
-                VALUES (%s,%s,%s,'created',%s,%s)
-            """, (file_id, dept, person, now, due_date))
+                INSERT INTO movements (file_id,department,person,action,in_time)
+                VALUES (%s,%s,%s,'created',%s)
+            """, (file_id, dept, person, now))
         else:
             c = conn.cursor()
             c.execute("""
-                INSERT INTO files (file_id,file_name,department,created_date,status,stage,priority,description,due_date,qr_base64)
-                VALUES (?,?,?,?,'active','created',?,?,?,?)
-            """, (file_id, file_name, dept, now, priority, desc, due_date, qr_b64))
+                INSERT INTO files (file_id,file_name,department,created_date,status,stage,priority,description,qr_base64)
+                VALUES (?,?,?,?,'active','created',?,?,?)
+            """, (file_id, file_name, dept, now, priority, desc, qr_b64))
             c.execute("""
-                INSERT INTO movements (file_id,department,person,action,in_time,due_date)
-                VALUES (?,?,?,'created',?,?)
-            """, (file_id, dept, person, now, due_date))
+                INSERT INTO movements (file_id,department,person,action,in_time)
+                VALUES (?,?,?,'created',?)
+            """, (file_id, dept, person, now))
 
         conn.commit()
         conn.close()
