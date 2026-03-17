@@ -90,9 +90,9 @@
       <div class="form-group">
         <label>ACTION</label>
         <div class="action-btns">
-          <button type="button" class="action-btn" onclick="selectAction('checkin')">↙ Check In</button>
-          <button type="button" class="action-btn" onclick="selectAction('checkout')">↗ Check Out</button>
-          <button type="button" class="action-btn" onclick="selectAction('transfer')">⇄ Transfer</button>
+          <button type="button" class="action-btn" onclick="selectAction('checkin', this)">↙ Check In</button>
+          <button type="button" class="action-btn" onclick="selectAction('checkout', this)">↗ Check Out</button>
+          <button type="button" class="action-btn" onclick="selectAction('transfer', this)">⇄ Transfer</button>
         </div>
         <input type="hidden" name="action" id="action-input">
       </div>
