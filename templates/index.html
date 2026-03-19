@@ -3,6 +3,45 @@
 {% block page_title %}Dashboard{% endblock %}
 {% block page_sub %}<span style="font-size:12px;color:var(--muted)">Real-time file tracking overview</span>{% endblock %}
 
+{% if overdue_popup %}
+<div id="overdue-modal" style="
+  position:fixed;top:0;left:0;right:0;bottom:0;
+  background:rgba(0,0,0,0.7);
+  display:flex;align-items:center;justify-content:center;
+  z-index:9999;">
+  <div style="
+    background:var(--surface);
+    border:1px solid rgba(239,68,68,0.4);
+    border-radius:16px;
+    padding:32px;
+    max-width:500px;
+    width:90%;
+    box-shadow:0 0 40px rgba(239,68,68,0.2)">
+    <div style="font-size:32px;text-align:center">⚠️</div>
+    <div style="font-size:18px;font-weight:700;color:var(--red);text-align:center;margin:12px 0">
+      {{ overdue_popup|length }} Overdue File(s)!
+    </div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:16px;text-align:center">
+      The following files are past their due date
+    </div>
+    {% for f in overdue_popup %}
+    <div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:8px;font-size:13px">
+      <span style="font-family:var(--mono);color:var(--accent)">{{ f.file_id }}</span>
+      — {{ f.file_name }}<br>
+      <span style="color:var(--muted)">Due: </span>
+      <span style="color:var(--red)">{{ f.due_date }}</span>
+      &nbsp;·&nbsp;
+      <span style="color:var(--muted)">Handler: </span>{{ f.person }}
+    </div>
+    {% endfor %}
+    <button onclick="document.getElementById('overdue-modal').style.display='none'"
+      class="btn btn-danger" style="width:100%;margin-top:16px">
+      Acknowledge & Close
+    </button>
+  </div>
+</div>
+{% endif %}
+
 {% block content %}
 <div class="grid-4" style="margin-bottom:28px">
   <div class="card stat">

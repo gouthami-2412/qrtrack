@@ -7,6 +7,9 @@ import qrcode
 import io
 import base64
 import sqlite3
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
@@ -178,6 +181,32 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated
 
+def send_overdue_email(to_email, overdue_files):
+    MAIL_EMAIL = os.environ.get("MAIL_EMAIL")
+    MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")
+    if not MAIL_EMAIL or not MAIL_PASSWORD:
+        return
+
+    subject = f"⚠️ QRTrack — {len(overdue_files)} Overdue File(s)"
+    body = "The following files are overdue:\n\n"
+    for f in overdue_files:
+        body += f"• File ID: {f['file_id']} | Name: {f['file_name']} | Due: {f['due_date']} | Handler: {f['person']}\n"
+    body += "\nPlease log in to QRTrack and take action."
+
+    msg = MIMEMultipart()
+    msg["From"] = MAIL_EMAIL
+    msg["To"] = to_email
+    msg["Subject"] = subject
+    msg.attach(MIMEText(body, "plain"))
+
+    try:
+        server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
+        server.login(MAIL_EMAIL, MAIL_PASSWORD)
+        server.sendmail(MAIL_EMAIL, to_email, msg.as_string())
+        server.quit()
+    except Exception as e:
+        print(f"Email error: {e}")
+
 # ──────────────────────────── ROUTES ────────────────────────────
 
 @app.route("/")
@@ -221,12 +250,14 @@ def index():
     overdue = db_fetchall(c)
 
     conn.close()
+    overdue_popup = session.pop("overdue_popup", None)
     return render_template("index.html",
         total_files=total_files,
         checked_out=checked_out,
         departments=departments,
         recent=recent,
-        overdue=overdue
+        overdue=overdue,
+        overdue_popup=overdue_popup
     )
 
 @app.route("/login", methods=["GET","POST"])
@@ -243,6 +274,37 @@ def login():
             session["role"] = user["role"]
             session["full_name"] = user["full_name"]
             session["department"] = user["department"]
+
+            # Check for overdue files and notify
+            conn = get_db()
+            if USE_POSTGRES:
+                c = conn.cursor()
+                c.execute("""
+                    SELECT f.file_id, f.file_name, m.person, m.due_date
+                    FROM movements m JOIN files f ON f.file_id = m.file_id
+                    WHERE m.action = 'checkout' AND m.out_time IS NULL
+                    AND m.due_date IS NOT NULL
+                    AND m.due_date::date < CURRENT_DATE
+                """)
+                overdue = [dict(r) for r in c.fetchall()]
+            else:
+                c = conn.cursor()
+                overdue = c.execute("""
+                    SELECT f.file_id, f.file_name, m.person, m.due_date
+                    FROM movements m JOIN files f ON f.file_id = m.file_id
+                    WHERE m.action = 'checkout' AND m.out_time IS NULL
+                    AND datetime(m.due_date) < datetime('now')
+                """).fetchall()
+                overdue = [dict(r) for r in overdue]
+            conn.close()
+
+            if overdue:
+                # Show popup
+                session["overdue_popup"] = overdue
+                # Send email
+                if user.get("email"):
+                    send_overdue_email(user["email"], overdue)
+
             return redirect("/")
         flash("Invalid username or password.", "error")
     return render_template("login.html")
