@@ -98,6 +98,7 @@ def init_db():
         c.execute("ALTER TABLE movements ADD COLUMN IF NOT EXISTS reminder_status TEXT DEFAULT 'none'")
         c.execute("ALTER TABLE files ADD COLUMN IF NOT EXISTS due_date TEXT")
         c.execute("ALTER TABLE files ADD COLUMN IF NOT EXISTS qr_base64 TEXT")
+        c.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS email TEXT")
         
         admin_pw = hashlib.sha256("admin123".encode()).hexdigest()
         c.execute("""INSERT INTO users (username, password, role, full_name, department)
@@ -316,16 +317,17 @@ def signup():
         password  = hashlib.sha256(request.form["password"].encode()).hexdigest()
         full_name = request.form["full_name"].strip()
         dept      = request.form["department"].strip()
+        email     = request.form.get("email", "").strip()
         conn = get_db()
         try:
             if USE_POSTGRES:
                 c = conn.cursor()
-                c.execute("INSERT INTO users (username,password,role,full_name,department) VALUES (%s,%s,%s,%s,%s)",
-                          (username, password, "viewer", full_name, dept))
+                c.execute("INSERT INTO users (username,password,role,full_name,department,email) VALUES (%s,%s,%s,%s,%s,%s)",
+                          (username, password, "viewer", full_name, dept,email))
             else:
                 c = conn.cursor()
-                c.execute("INSERT INTO users (username,password,role,full_name,department) VALUES (?,?,?,?,?)",
-                          (username, password, "viewer", full_name, dept))
+                c.execute("INSERT INTO users (username,password,role,full_name,department,email) VALUES (?,?,?,?,?,?)",
+                          (username, password, "viewer", full_name, dept,email))
             conn.commit()
             flash("Account created successfully. Please login.", "success")
             return redirect("/login")
@@ -516,16 +518,17 @@ def users():
         role      = request.form["role"]
         full_name = request.form["full_name"].strip()
         dept      = request.form["department"].strip()
+        email     = request.form.get("email", "").strip()
         conn = get_db()
         try:
             if USE_POSTGRES:
                 c = conn.cursor()
-                c.execute("INSERT INTO users (username,password,role,full_name,department) VALUES (%s,%s,%s,%s,%s)",
-                          (username, password, role, full_name, dept))
+                c.execute("INSERT INTO users (username,password,role,full_name,department,email) VALUES (%s,%s,%s,%s,%s,%s)",
+                          (username, password, role, full_name, dept,email))
             else:
                 c = conn.cursor()
-                c.execute("INSERT INTO users (username,password,role,full_name,department) VALUES (?,?,?,?,?)",
-                          (username, password, role, full_name, dept))
+                c.execute("INSERT INTO users (username,password,role,full_name,department,email) VALUES (?,?,?,?,?,?)",
+                          (username, password, role, full_name, dept,email))
             conn.commit()
             flash(f"User '{username}' created!", "success")
         except Exception:
