@@ -540,7 +540,7 @@ def users():
         finally:
             conn.close()
     conn = get_db()
-    c = db_execute(conn, "SELECT id, username, role, full_name, department FROM users")
+    c = db_execute(conn, "SELECT id, username, role, full_name, department,email FROM users")
     all_users = db_fetchall(c)
     conn.close()
     return render_template("users.html", users=all_users)
