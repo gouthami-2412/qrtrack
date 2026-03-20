@@ -25,6 +25,7 @@ if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "qrtrack_secret_key_2024")
+app.config["SESSION_COOKIE_SIZE"] = 4096
 
 os.makedirs("static/qrcodes", exist_ok=True)
 
@@ -304,8 +305,12 @@ def login():
             conn.close()
 
             if overdue:
-                # Show popup
-                session["overdue_popup"] = overdue
+                # Store only essential fields to keep session small
+                session["overdue_popup"] = [
+                    {"file_id": f["file_id"], "file_name": f["file_name"], 
+                    "due_date": str(f["due_date"]), "person": f["person"]}
+                    for f in overdue
+                ]
                 # Send email
                 if user.get("email"):
                     send_overdue_email(user["email"], overdue)
