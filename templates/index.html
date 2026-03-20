@@ -3,6 +3,8 @@
 {% block page_title %}Dashboard{% endblock %}
 {% block page_sub %}<span style="font-size:12px;color:var(--muted)">Real-time file tracking overview</span>{% endblock %}
 
+{% block content %}
+
 {% if overdue_popup %}
 <div id="overdue-modal" style="
   position:fixed;top:0;left:0;right:0;bottom:0;
@@ -42,7 +44,6 @@
 </div>
 {% endif %}
 
-{% block content %}
 <div class="grid-4" style="margin-bottom:28px">
   <div class="card stat">
     <div style="display:flex;align-items:flex-start;justify-content:space-between">
