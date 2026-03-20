@@ -104,6 +104,11 @@ def init_db():
         c.execute("""INSERT INTO users (username, password, role, full_name, department)
                      VALUES (%s,%s,%s,%s,%s) ON CONFLICT (username) DO NOTHING""",
                   ("admin", admin_pw, "admin", "Administrator", "Admin"))
+        
+        try:
+            c.execute("ALTER TABLE users ADD COLUMN email TEXT")
+        except:
+            pass
         conn.commit()
         conn.close()
     else:
