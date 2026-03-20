@@ -541,6 +541,16 @@ def users():
     conn.close()
     return render_template("users.html", users=all_users)
 
+@app.route("/delete_user/<int:user_id>")
+@admin_required
+def delete_user(user_id):
+    conn = get_db()
+    db_execute(conn, "DELETE FROM users WHERE id=?", (user_id,))
+    conn.commit()
+    conn.close()
+    flash("User deleted.", "success")
+    return redirect("/users")
+
 @app.route("/fileinfo/<file_id>")
 @login_required
 def fileinfo(file_id):
