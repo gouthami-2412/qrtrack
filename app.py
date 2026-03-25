@@ -305,15 +305,20 @@ def login():
             conn.close()
 
             if overdue:
-                # Store only essential fields to keep session small
                 session["overdue_popup"] = [
-                    {"file_id": f["file_id"], "file_name": f["file_name"], 
+                    {"file_id": f["file_id"], "file_name": f["file_name"],
                     "due_date": str(f["due_date"]), "person": f["person"]}
                     for f in overdue
                 ]
-                # Send email
+                # Send email in background thread so login doesn't slow down
                 if user.get("email"):
-                    send_overdue_email(user["email"], overdue)
+                    import threading
+                    thread = threading.Thread(
+                        target=send_overdue_email,
+                        args=(user["email"], overdue)
+                    )
+                    thread.daemon = True
+                    thread.start()
 
             return redirect("/")
         flash("Invalid username or password.", "error")
