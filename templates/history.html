@@ -73,7 +73,7 @@
 
         <div>
           <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:3px">CREATED</div>
-          <div style="font-size:12px">{{ file_info.get('created_date','')[:16] }}</div>
+          <div style="font-size:12px">{{ file_info.get('created_date','') }}</div>
         </div>
 
         <div>
@@ -139,7 +139,7 @@
               <span class="badge badge-purple">✦ Created</span>
             {% endif %}
             <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">
-              {{ r.get('in_time','')[:16] if r.get('in_time') else '—' }}
+              {{ r.get('in_time','') if r.get('in_time') else '—' }}
             </span>
           </div>
 
@@ -147,7 +147,7 @@
             <div><span style="color:var(--muted)">By: </span><strong>{{ r.get('person','—') }}</strong></div>
             <div><span style="color:var(--muted)">Dept: </span>{{ r.get('department','—') }}</div>
             {% if r.get('out_time') %}
-            <div><span style="color:var(--muted)">Out: </span>{{ r.get('out_time','')[:16] }}</div>
+            <div><span style="color:var(--muted)">Out: </span>{{ r.get('out_time','') }}</div>
             {% endif %}
             {% if r.get('due_date') %}
             <div><span style="color:var(--muted)">Due: </span><span style="color:var(--amber)">{{ r.get('due_date') }}</span></div>

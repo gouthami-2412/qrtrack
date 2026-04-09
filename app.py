@@ -1,7 +1,13 @@
 from flask import Flask, render_template, request, redirect, jsonify, session, flash
 import os
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from functools import wraps
+
+IST = timezone(timedelta(hours=5, minutes=30))
+
+def now_ist():
+    """Return current datetime string in IST, formatted cleanly."""
+    return datetime.now(IST).strftime("%d/%m/%Y %H:%M")
 import hashlib
 import qrcode
 import io
@@ -235,24 +241,38 @@ def index():
                              ORDER BY m.id DESC LIMIT 8""")
     recent = db_fetchall(c)
 
-    # Overdue files — checked out and past due date
+    # Overdue: past due date AND no checkin recorded after the checkout
     if USE_POSTGRES:
         c = db_execute(conn, """
             SELECT f.file_id, f.file_name, m.person, m.due_date
             FROM movements m
             JOIN files f ON f.file_id = m.file_id
-            WHERE m.action = 'checkout' AND m.out_time IS NULL
+            WHERE m.action = 'checkout'
             AND m.due_date IS NOT NULL
             AND m.due_date::date < CURRENT_DATE
+            AND NOT EXISTS (
+                SELECT 1 FROM movements m2
+                WHERE m2.file_id = m.file_id
+                AND m2.action = 'checkin'
+                AND m2.id > m.id
+            )
         """)
     else:
+        today_ist = datetime.now(IST).strftime("%Y-%m-%d")
         c = db_execute(conn, """
             SELECT f.file_id, f.file_name, m.person, m.due_date
             FROM movements m
             JOIN files f ON f.file_id = m.file_id
-            WHERE m.action = 'checkout' AND m.out_time IS NULL
-            AND datetime(m.due_date) < datetime('now')
-        """)
+            WHERE m.action = 'checkout'
+            AND m.due_date IS NOT NULL
+            AND date(m.due_date) < date(?)
+            AND NOT EXISTS (
+                SELECT 1 FROM movements m2
+                WHERE m2.file_id = m.file_id
+                AND m2.action = 'checkin'
+                AND m2.id > m.id
+            )
+        """, (today_ist,))
     overdue = db_fetchall(c)
 
     conn.close()
@@ -288,19 +308,33 @@ def login():
                 c.execute("""
                     SELECT f.file_id, f.file_name, m.person, m.due_date
                     FROM movements m JOIN files f ON f.file_id = m.file_id
-                    WHERE m.action = 'checkout' AND m.out_time IS NULL
+                    WHERE m.action = 'checkout'
                     AND m.due_date IS NOT NULL
                     AND m.due_date::date < CURRENT_DATE
+                    AND NOT EXISTS (
+                        SELECT 1 FROM movements m2
+                        WHERE m2.file_id = m.file_id
+                        AND m2.action = 'checkin'
+                        AND m2.id > m.id
+                    )
                 """)
                 overdue = [dict(r) for r in c.fetchall()]
             else:
                 c = conn.cursor()
+                today_ist = datetime.now(IST).strftime("%Y-%m-%d")
                 overdue = c.execute("""
                     SELECT f.file_id, f.file_name, m.person, m.due_date
                     FROM movements m JOIN files f ON f.file_id = m.file_id
-                    WHERE m.action = 'checkout' AND m.out_time IS NULL
-                    AND datetime(m.due_date) < datetime('now')
-                """).fetchall()
+                    WHERE m.action = 'checkout'
+                    AND m.due_date IS NOT NULL
+                    AND date(m.due_date) < date(?)
+                    AND NOT EXISTS (
+                        SELECT 1 FROM movements m2
+                        WHERE m2.file_id = m.file_id
+                        AND m2.action = 'checkin'
+                        AND m2.id > m.id
+                    )
+                """, (today_ist,)).fetchall()
                 overdue = [dict(r) for r in overdue]
             conn.close()
 
@@ -388,7 +422,7 @@ def create():
         except Exception:
             pass
 
-        now = str(datetime.now())
+        now = now_ist()
 
         if USE_POSTGRES:
             c = conn.cursor()
@@ -438,7 +472,7 @@ def scan():
             flash(f"File ID '{file_id}' not found.", "error")
             return render_template("scan.html")
 
-        now = str(datetime.now())
+        now = now_ist()
 
         if USE_POSTGRES:
             c = conn.cursor()

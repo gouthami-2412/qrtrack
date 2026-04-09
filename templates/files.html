@@ -141,7 +141,7 @@ data-search="{{ f.get('file_id','') }} {{ f.get('file_name','') }} {{ f.get('dep
 <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">
 
 {% if f.get('created_date') %}
-{{ f.get('created_date')[:10] }}
+{{ f.get('created_date') }}
 {% else %}
 —
 {% endif %}
