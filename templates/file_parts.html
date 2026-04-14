@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}Parts – {{ file_info.file_id }} – QRTrack{% endblock %}
+{% block page_title %}File Parts{% endblock %}
+{% block page_sub %}<span style="font-size:12px;color:var(--muted)">Logical sub-parts for {{ file_info.file_id }}</span>{% endblock %}
+
+{% block content %}
+
+<!-- File summary bar -->
+<div class="card" style="margin-bottom:24px;padding:16px 24px">
+  <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+    <div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--muted)">FILE ID</div>
+      <div style="font-family:var(--mono);font-size:16px;font-weight:700;color:var(--accent)">{{ file_info.file_id }}</div>
+    </div>
+    <div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--muted)">FILE NAME</div>
+      <div style="font-weight:600">{{ file_info.file_name }}</div>
+    </div>
+    <div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--muted)">DEPARTMENT</div>
+      <div style="font-size:13px">{{ file_info.department }}</div>
+    </div>
+    <div style="margin-left:auto">
+      <a href="/history" class="btn btn-secondary btn-sm">View History</a>
+      <a href="/files" class="btn btn-secondary btn-sm" style="margin-left:8px">All Files</a>
+    </div>
+  </div>
+</div>
+
+<div class="grid-2">
+
+  <!-- Left: grouped parts display -->
+  <div style="display:flex;flex-direction:column;gap:20px">
+
+    {% set part_types = ['Invoice', 'Bill', 'Receipt', 'Other'] %}
+
+    {% if not grouped %}
+    <div class="card" style="text-align:center;padding:48px;color:var(--muted)">
+      <div style="font-size:40px">📂</div>
+      <div style="margin-top:12px;font-size:14px">No parts added yet.</div>
+      <div style="font-size:12px;margin-top:4px">Use the form to add invoices, bills, or receipts.</div>
+    </div>
+    {% endif %}
+
+    {% for ptype in part_types %}
+      {% if grouped.get(ptype) %}
+      <div class="card">
+        <div class="card-header" style="margin-bottom:12px">
+          <div class="card-title">
+            {% if ptype == 'Invoice' %}🧾
+            {% elif ptype == 'Bill' %}📄
+            {% elif ptype == 'Receipt' %}🏷️
+            {% else %}📎{% endif %}
+            {{ ptype }}s
+            <span style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:8px">
+              {{ grouped[ptype]|length }} item(s)
+            </span>
+          </div>
+        </div>
+        {% for part in grouped[ptype] %}
+        <a href="/part/{{ part.id }}" style="text-decoration:none">
+          <div style="
+            background:var(--surface2);
+            border:1px solid var(--border);
+            border-radius:8px;
+            padding:12px 16px;
+            margin-bottom:8px;
+            cursor:pointer;
+            transition:border-color 0.15s;
+          "
+          onmouseover="this.style.borderColor='var(--accent)'"
+          onmouseout="this.style.borderColor='var(--border)'">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div style="font-weight:600;font-size:13px;color:var(--text)">{{ part.title }}</div>
+              <span style="font-family:var(--mono);font-size:10px;color:var(--muted)">{{ part.created_date }}</span>
+            </div>
+            {% if part.description %}
+            <div style="font-size:12px;color:var(--muted);margin-top:4px">{{ part.description }}</div>
+            {% endif %}
+            <div style="font-size:11px;color:var(--muted);margin-top:6px">By: {{ part.created_by }}</div>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+      {% endif %}
+    {% endfor %}
+
+    <!-- Any types not in the default list -->
+    {% for ptype, parts in grouped.items() %}
+      {% if ptype not in part_types %}
+      <div class="card">
+        <div class="card-header" style="margin-bottom:12px">
+          <div class="card-title">📎 {{ ptype }}s <span style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:8px">{{ parts|length }} item(s)</span></div>
+        </div>
+        {% for part in parts %}
+        <a href="/part/{{ part.id }}" style="text-decoration:none">
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:8px;cursor:pointer;transition:border-color 0.15s"
+               onmouseover="this.style.borderColor='var(--accent)'"
+               onmouseout="this.style.borderColor='var(--border)'">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div style="font-weight:600;font-size:13px;color:var(--text)">{{ part.title }}</div>
+              <span style="font-family:var(--mono);font-size:10px;color:var(--muted)">{{ part.created_date }}</span>
+            </div>
+            {% if part.description %}
+            <div style="font-size:12px;color:var(--muted);margin-top:4px">{{ part.description }}</div>
+            {% endif %}
+            <div style="font-size:11px;color:var(--muted);margin-top:6px">By: {{ part.created_by }}</div>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+      {% endif %}
+    {% endfor %}
+
+  </div>
+
+  <!-- Right: Add new part form -->
+  <div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">➕ Add New Part</div>
+        <div class="card-sub">Attach a logical sub-part to this file</div>
+      </div>
+      <form method="POST" action="/file/{{ file_info.file_id }}/add_part">
+        <div class="form-group">
+          <label>PART TYPE</label>
+          <select name="part_type" required>
+            <option value="">Select type</option>
+            <option value="Invoice">Invoice</option>
+            <option value="Bill">Bill</option>
+            <option value="Receipt">Receipt</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>TITLE</label>
+          <input type="text" name="title" placeholder="e.g. Vendor Invoice #2234" required>
+        </div>
+        <div class="form-group">
+          <label>DESCRIPTION (optional)</label>
+          <textarea name="description" rows="3" placeholder="Details, amounts, notes..." style="resize:vertical"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%">Add Part →</button>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

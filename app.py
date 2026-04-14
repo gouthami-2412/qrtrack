@@ -199,7 +199,7 @@ def send_overdue_email(to_email, overdue_files):
     if not MAIL_EMAIL or not MAIL_PASSWORD:
         return
 
-    subject = f"⚠️ QRTrack — {len(overdue_files)} Overdue File(s)"
+    subject = f"QRTrack — {len(overdue_files)} Overdue File(s)"
     body = "The following files are overdue:\n\n"
     for f in overdue_files:
         body += f"• File ID: {f['file_id']} | Name: {f['file_name']} | Due: {f['due_date']} | Handler: {f['person']}\n"

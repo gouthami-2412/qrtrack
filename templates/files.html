@@ -153,6 +153,12 @@ data-search="{{ f.get('file_id','') }} {{ f.get('file_name','') }} {{ f.get('dep
 <div style="display:flex;gap:6px">
 
 <a
+href="/file/{{ f.file_id }}/parts"
+ class="btn btn-secondary btn-sm">
+  📎 Parts
+</a>
+
+<a
 href="/history"
 onclick="sessionStorage.setItem('hid','{{ f.file_id }}')"
 class="btn btn-secondary btn-sm">

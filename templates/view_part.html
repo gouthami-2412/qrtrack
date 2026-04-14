@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Part Details – QRTrack{% endblock %}
+{% block page_title %}Part Details{% endblock %}
+{% block page_sub %}<span style="font-size:12px;color:var(--muted)">Viewing a single file part</span>{% endblock %}
+
+{% block content %}
+<div style="max-width:600px">
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+      <div style="font-size:36px">
+        {% if part.part_type == 'Invoice' %}🧾
+        {% elif part.part_type == 'Bill' %}📄
+        {% elif part.part_type == 'Receipt' %}🏷️
+        {% else %}📎{% endif %}
+      </div>
+      <div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--muted)">{{ part.part_type | upper }}</div>
+        <div style="font-size:20px;font-weight:700">{{ part.title }}</div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:16px;font-size:13px">
+      <div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px">LINKED FILE</div>
+        <a href="/file/{{ part.file_id }}/parts" style="color:var(--accent);font-family:var(--mono);font-weight:700">
+          {{ part.file_id }}
+        </a>
+      </div>
+
+      <div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px">PART TYPE</div>
+        <span class="badge badge-blue">{{ part.part_type }}</span>
+      </div>
+
+      {% if part.description %}
+      <div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px">DESCRIPTION</div>
+        <div style="background:var(--surface2);border-radius:8px;padding:12px;color:var(--text);line-height:1.6">
+          {{ part.description }}
+        </div>
+      </div>
+      {% endif %}
+
+      <div style="display:flex;gap:32px">
+        <div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px">ADDED BY</div>
+          <div>{{ part.created_by }}</div>
+        </div>
+        <div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px">DATE ADDED</div>
+          <div style="font-family:var(--mono);font-size:12px">{{ part.created_date }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:24px;display:flex;gap:10px">
+      <a href="/file/{{ part.file_id }}/parts" class="btn btn-secondary">← Back to File Parts</a>
+      <a href="/files" class="btn btn-secondary">All Files</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
