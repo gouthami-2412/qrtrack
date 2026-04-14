@@ -101,6 +101,16 @@ def init_db():
             reminder_status TEXT DEFAULT 'none'
         )''')
 
+        c.execute('''CREATE TABLE IF NOT EXISTS file_parts (
+            id SERIAL PRIMARY KEY,
+            file_id TEXT NOT NULL,
+            part_type TEXT NOT NULL,
+            title TEXT NOT NULL,
+            description TEXT,
+            created_by TEXT,
+            created_date TEXT
+        )''')
+
         c.execute("ALTER TABLE movements ADD COLUMN IF NOT EXISTS due_date TEXT")
         c.execute("ALTER TABLE movements ADD COLUMN IF NOT EXISTS reminder_status TEXT DEFAULT 'none'")
         c.execute("ALTER TABLE files ADD COLUMN IF NOT EXISTS due_date TEXT")
@@ -146,6 +156,15 @@ def init_db():
             notes TEXT,
             due_date TEXT,
             reminder_status TEXT DEFAULT 'none'
+        )''')
+        c.execute('''CREATE TABLE IF NOT EXISTS file_parts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            file_id TEXT NOT NULL,
+            part_type TEXT NOT NULL,
+            title TEXT NOT NULL,
+            description TEXT,
+            created_by TEXT,
+            created_date TEXT
         )''')
         admin_pw = hashlib.sha256("admin123".encode()).hexdigest()
         c.execute("INSERT OR IGNORE INTO users (username, password, role, full_name, department) VALUES (?,?,?,?,?)",
@@ -618,6 +637,73 @@ def fileinfo(file_id):
         "stage": f.get("stage", "created"),
         "person": m["person"] if m else "Unknown"
     })
+
+@app.route("/file/<file_id>/add_part", methods=["POST"])
+@login_required
+def add_part(file_id):
+    part_type   = request.form.get("part_type", "").strip()
+    title       = request.form.get("title", "").strip()
+    description = request.form.get("description", "").strip()
+    created_by  = session["full_name"]
+    now         = now_ist()
+
+    if not part_type or not title:
+        flash("Part type and title are required.", "error")
+        return redirect(f"/file/{file_id}/parts")
+
+    conn = get_db()
+    if USE_POSTGRES:
+        c = conn.cursor()
+        c.execute(
+            "INSERT INTO file_parts (file_id, part_type, title, description, created_by, created_date) VALUES (%s,%s,%s,%s,%s,%s)",
+            (file_id, part_type, title, description, created_by, now)
+        )
+    else:
+        c = conn.cursor()
+        c.execute(
+            "INSERT INTO file_parts (file_id, part_type, title, description, created_by, created_date) VALUES (?,?,?,?,?,?)",
+            (file_id, part_type, title, description, created_by, now)
+        )
+    conn.commit()
+    conn.close()
+    flash(f"Part '{title}' added successfully.", "success")
+    return redirect(f"/file/{file_id}/parts")
+
+@app.route("/file/<file_id>/parts")
+@login_required
+def file_parts(file_id):
+    conn = get_db()
+    c = db_execute(conn, "SELECT * FROM files WHERE file_id=?", (file_id.upper(),))
+    file_info = db_fetchone(c)
+    if not file_info:
+        conn.close()
+        flash("File not found.", "error")
+        return redirect("/files")
+
+    c = db_execute(conn, "SELECT * FROM file_parts WHERE file_id=? ORDER BY id DESC", (file_id.upper(),))
+    parts = db_fetchall(c)
+    conn.close()
+
+    # Group parts by type
+    grouped = {}
+    for p in parts:
+        ptype = p["part_type"]
+        grouped.setdefault(ptype, []).append(p)
+
+    return render_template("file_parts.html", file_info=file_info, grouped=grouped, all_parts=parts)
+
+@app.route("/part/<int:part_id>")
+@login_required
+def view_part(part_id):
+    conn = get_db()
+    c = db_execute(conn, "SELECT * FROM file_parts WHERE id=?", (part_id,))
+    part = db_fetchone(c)
+    conn.close()
+    if not part:
+        flash("Part not found.", "error")
+        return redirect("/files")
+    return render_template("view_part.html", part=part)
+
 
 if __name__ == "__main__":
     app.run(debug=True, use_reloader=False)
