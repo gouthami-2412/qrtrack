@@ -456,19 +456,20 @@ def create():
             part_titles = request.form.getlist("part_title[]")
             part_descriptions = request.form.getlist("part_description[]")
 
-            for i in range(len(part_types)):
-                if part_titles[i].strip():
-                    c.execute("""
-                        INSERT INTO file_parts (id, file_id, part_type, title, description, created_at)
-                        VALUES (%s, %s, %s, %s, %s, %s)
-                    """, (
-                        str(uuid.uuid4()),
-                        file_id,
-                        part_types[i],
-                        part_titles[i],
-                        part_descriptions[i],
-                        now
-                    ))
+            if part_types:   # ✅ prevents crash when no parts
+                for i in range(len(part_types)):
+                    if i < len(part_titles) and part_titles[i].strip():
+                        c.execute("""
+                            INSERT INTO file_parts (id, file_id, part_type, title, description, created_at)
+                            VALUES (%s, %s, %s, %s, %s, %s)
+                        """, (
+                            str(uuid.uuid4()),
+                            file_id,
+                            part_types[i],
+                            part_titles[i],
+                            part_descriptions[i] if i < len(part_descriptions) else "",
+                            now
+                        ))
 
             c.execute("""
                 INSERT INTO movements (file_id,department,person,action,in_time)
@@ -487,19 +488,20 @@ def create():
             part_titles = request.form.getlist("part_title[]")
             part_descriptions = request.form.getlist("part_description[]")
 
-            for i in range(len(part_types)):
-                if part_titles[i].strip():
-                    c.execute("""
-                        INSERT INTO file_parts (id, file_id, part_type, title, description, created_at)
-                        VALUES (?, ?, ?, ?, ?, ?)
-                    """, (
-                        str(uuid.uuid4()),
-                        file_id,
-                        part_types[i],
-                        part_titles[i],
-                        part_descriptions[i],
-                        now
-                    ))
+            if part_types:   # ✅ prevents crash when no parts
+                for i in range(len(part_types)):
+                    if i < len(part_titles) and part_titles[i].strip():
+                        c.execute("""
+                            INSERT INTO file_parts (id, file_id, part_type, title, description, created_at)
+                            VALUES (?, ?, ?, ?, ?, ?)
+                        """, (
+                            str(uuid.uuid4()),
+                            file_id,
+                            part_types[i],
+                            part_titles[i],
+                            part_descriptions[i] if i < len(part_descriptions) else "",
+                            now
+                        ))
 
             c.execute("""
                 INSERT INTO movements (file_id,department,person,action,in_time)
