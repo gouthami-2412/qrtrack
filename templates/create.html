@@ -51,6 +51,29 @@
         <textarea name="description" rows="3" placeholder="Brief description of the file content..." style="resize:vertical"></textarea>
       </div>
 
+      <hr style="margin:20px 0">
+
+      <h3 style="margin-bottom:10px">File Parts (Optional)</h3>
+
+      <div id="parts-container">
+        <div class="part" style="margin-bottom:10px">
+          <select name="part_type[]" class="form-group">
+            <option value="invoice">Invoice</option>
+            <option value="bill">Bill</option>
+            <option value="receipt">Receipt</option>
+          </select>
+
+          <input type="text" name="part_title[]" placeholder="Part Title" class="form-group">
+
+          <input type="text" name="part_description[]" placeholder="Part Description" class="form-group">
+        </div>
+      </div>
+
+      <button type="button" class="btn btn-secondary btn-sm" onclick="addPart()">
+        + Add Another Part
+      </button>
+
+
       <button type="submit" class="btn btn-primary" style="width:100%">Generate QR Code →</button>
     </form>
   </div>
@@ -102,4 +125,29 @@
     {% endif %}
   </div>
 </div>
+
+<script>
+function addPart() {
+  const container = document.getElementById("parts-container");
+
+  const newPart = document.createElement("div");
+  newPart.classList.add("part");
+  newPart.style.marginBottom = "10px";
+
+  newPart.innerHTML = `
+    <select name="part_type[]" class="form-group">
+      <option value="invoice">Invoice</option>
+      <option value="bill">Bill</option>
+      <option value="receipt">Receipt</option>
+    </select>
+
+    <input type="text" name="part_title[]" placeholder="Part Title" class="form-group">
+
+    <input type="text" name="part_description[]" placeholder="Part Description" class="form-group">
+  `;
+
+  container.appendChild(newPart);
+}
+</script>
+
 {% endblock %}

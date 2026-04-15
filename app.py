@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, jsonify, session, f
 import os
 from datetime import datetime, timezone, timedelta
 from functools import wraps
+import uuid
 
 IST = timezone(timedelta(hours=5, minutes=30))
 
@@ -449,20 +450,62 @@ def create():
                 INSERT INTO files (file_id,file_name,department,created_date,status,stage,priority,description,qr_base64)
                 VALUES (%s,%s,%s,%s,'active','created',%s,%s,%s)
             """, (file_id, file_name, dept, now, priority, desc, qr_b64))
+
+            # ✅ ADD THIS BLOCK (PARTS INSERT)
+            part_types = request.form.getlist("part_type[]")
+            part_titles = request.form.getlist("part_title[]")
+            part_descriptions = request.form.getlist("part_description[]")
+
+            for i in range(len(part_types)):
+                if part_titles[i].strip():
+                    c.execute("""
+                        INSERT INTO file_parts (id, file_id, part_type, title, description, created_at)
+                        VALUES (%s, %s, %s, %s, %s, %s)
+                    """, (
+                        str(uuid.uuid4()),
+                        file_id,
+                        part_types[i],
+                        part_titles[i],
+                        part_descriptions[i],
+                        now
+                    ))
+
             c.execute("""
                 INSERT INTO movements (file_id,department,person,action,in_time)
                 VALUES (%s,%s,%s,'created',%s)
             """, (file_id, dept, person, now))
+
         else:
             c = conn.cursor()
             c.execute("""
                 INSERT INTO files (file_id,file_name,department,created_date,status,stage,priority,description,qr_base64)
                 VALUES (?,?,?,?,'active','created',?,?,?)
             """, (file_id, file_name, dept, now, priority, desc, qr_b64))
+
+            # ✅ ADD THIS BLOCK (PARTS INSERT)
+            part_types = request.form.getlist("part_type[]")
+            part_titles = request.form.getlist("part_title[]")
+            part_descriptions = request.form.getlist("part_description[]")
+
+            for i in range(len(part_types)):
+                if part_titles[i].strip():
+                    c.execute("""
+                        INSERT INTO file_parts (id, file_id, part_type, title, description, created_at)
+                        VALUES (?, ?, ?, ?, ?, ?)
+                    """, (
+                        str(uuid.uuid4()),
+                        file_id,
+                        part_types[i],
+                        part_titles[i],
+                        part_descriptions[i],
+                        now
+                    ))
+
             c.execute("""
                 INSERT INTO movements (file_id,department,person,action,in_time)
                 VALUES (?,?,?,'created',?)
             """, (file_id, dept, person, now))
+
 
         conn.commit()
         conn.close()
